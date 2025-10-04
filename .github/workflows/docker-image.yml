@@ -15,4 +15,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - run: docker build . --file Dockerfile --tag whistlebower:$(date +%s)
+  
+  uploadtoDocker:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: upload image to docker
+    - run: docker push kishimi8/kishimi8:whistlebower:$(date +%s)
