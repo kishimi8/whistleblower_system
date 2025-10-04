@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Report - Secure Whistleblowing System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Speak Up Safely</h1>
+        <p class="text-xl text-gray-600 mb-6">Report wrongdoing anonymously and securely</p>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-2xl mx-auto">
+            <div class="flex items-center justify-center mb-4">
+                <svg class="h-8 w-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <h3 class="text-lg font-semibold text-blue-900">Your Protection is Guaranteed</h3>
+            </div>
+            <ul class="text-sm text-blue-800 text-left space-y-2">
+                <li>✓ Complete anonymity - no personal information required</li>
+                <li>✓ Secure encrypted data transmission</li>
+                <li>✓ Track your case progress anonymously</li>
+                <li>✓ Legal protection against retaliation</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Report Form -->
+    <div class="bg-white shadow-lg rounded-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Submit Your Report</h2>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Report Title *
+                </label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.organisation_type.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Organisation Type *
+                </label>
+                {{ form.organisation_type }}
+                {% if form.organisation_type.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.organisation_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.tip_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Type of Tip *
+                </label>
+                {{ form.tip_type }}
+                {% if form.tip_type.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.tip_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.organisation_name.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Organisation *
+                </label>
+                {{ form.organisation_name }}
+                {% if form.organisation_name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.organisation_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.branch_address_of_organisation.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Brach Address where Misconduct Occured.
+                </label>
+                {{ form.branch_address_of_organisation }}
+                {% if form.branch_address_of_organisation.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.branch_address_of_organisation.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- <div>
+                    <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Category *
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div> -->
+                <div>
+                    <label for="{{ form.misconduct_ongoing_status.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Is the Alleged Misconduct/Fraud Ongoing *
+                    </label>
+                    {{ form.misconduct_ongoing_status }}
+                    {% if form.misconduct_ongoing_status.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.misconduct_ongoing_status.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.incident_date.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Incident Date *
+                    </label>
+                    {{ form.incident_date }}
+                    {% if form.incident_date.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.incident_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <label for="{{ form.description_of_tip.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Detailed Description *
+                </label>
+                {{ form.description_of_tip }}
+                <p class="mt-1 text-sm text-gray-500">Please provide as much detail as possible to help our
+                    investigation</p>
+                {% if form.description_of_tip.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.description_of_tip.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!--<div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Detailed Description *
+                </label>
+                {{form.des}}
+                <p class="mt-1 text-sm text-gray-500">Please provide as much detail as possible to help our
+                    investigation.</p>
+                {% if form.description.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div> -->
+
+            <div>
+                <label for="{{ form.persons_involved.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Persons Involved (Optional)
+                </label>
+                {{ form.persons_involved }}
+                <p class="mt-1 text-sm text-gray-500">Names, departments, or descriptions of people involved.</p>
+                {% if form.persons_involved.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.persons_involved.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+                <label for="{{ form.amount_involved.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Amount of Money Involved (Select appropriate currency).
+                </label>
+                {{ form.amount_involved }}
+                <p class="mt-1 text-sm text-gray-500">Money involved in the misconduct.</p>
+                {% if form.amount_involved.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.amount_involved.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.other_agency_name.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    If you have Submitted this information to another Organisation, Input its name here
+                </label>
+                {{ form.other_agency_name }}
+                {% if form.other_agency_name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.other_agency_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.other_agency_submitted_date.id_for_label }}"
+                    class="block text-sm font-medium text-gray-700 mb-2">
+                    Date information was shared with other Agency *
+                </label>
+                {{ form.other_agency_submitted_date }}
+                {% if form.other_agency_submitted_date.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.other_agency_submitted_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.evidence_file.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Supporting Evidence (Optional)
+                </label>
+                {{ form.evidence_file }}
+                <p class="mt-1 text-sm text-gray-500">Upload documents, screenshots, or other evidence (Max 10MB).</p>
+                {% if form.evidence_file.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.evidence_file.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex">
+                    <svg class="h-5 w-5 text-yellow-600 mt-0.5 mr-3" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.962-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div class="text-sm text-yellow-800">
+                        <p class="font-medium mb-1">Important Reminder:</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Only factual information should be reported</li>
+                            <li>False accusations may have legal consequences</li>
+                            <li>Save your Case ID and Access Code to track progress</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-blue shadow-lg rounded-lg p-8">
+                <h2 class="text-1xl font-bold text-gray-900 mb-6">Optional! Submit your Personal Details</h2>
+                <div>
+                    <label for="{{ form.whistleblower_surname.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Surname
+                    </label>
+                    {{ form.whistleblower_surname }}
+                    {% if form.whistleblower_surname.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.whistleblower_surname.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.whistleblower_firstname.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Firstname
+                    </label>
+                    {{ form.whistleblower_firstname }}
+                    {% if form.whistleblower_firstname.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.whistleblower_firstname.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.whistleblower_mobile_number.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Mobile Number
+                    </label>
+                    {{ form.whistleblower_mobile_number }}
+                    {% if form.whistleblower_mobile_number.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.whistleblower_mobile_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+
+                <div>
+                    <label for="{{ form.whistleblower_email.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                    </label>
+                    {{ form.whistleblower_email }}
+                    {% if form.whistleblower_email.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.whistleblower_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.whistleblower_address.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Contact Address
+                    </label>
+                    {{ form.whistleblower_firstname }}
+                    {% if form.whistleblower_address.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.whistleblower_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+
+            </div>
+
+            <div class="flex items-center justify-between pt-6">
+                <button type="button" onclick="history.back()" class="px-6 py-2 text-gray-600 hover:text-gray-800">
+                    ← Back
+                </button>
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Submit Report Securely
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

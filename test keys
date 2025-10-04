@@ -1,0 +1,29 @@
+🔑 Save These Details to Track Your Case
+Case ID:
+WB2025079396
+Access Code:
+N9N1Z3CT
+⚠️ Important: Write down or screenshot these details!
+
+You'll need both to track your case and communicate with investigators.
+
+New features to be added also
+For Whistleblowers
+
+Save Credentials: New  Case ID and Access Code for checking case progress 
+Track Progress: Use credentials to check report status
+Communicate: Send secure messages to investigators
+
+For Investigators (Admin)
+Review Reports: View and manage submitted reports
+Update Status: Change report status as investigation progresses
+Communicate: Send messages to whistleblowers
+Close Cases: Add resolution summary when complete
+
+🔒 Security Features
+
+Secure Access: Case ID + Access Code authentication
+File Validation: Secure file upload with size limits
+CSRF Protection: Prevents cross-site request forgery
+Audit Logging: Complete action tracking all actions in the portal are corded for audit purposes
+Data Encryption: Secure data transmission

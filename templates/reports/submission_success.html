@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Submitted Successfully{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white shadow-lg rounded-lg p-8 text-center">
+        <div class="mb-6">
+            <svg class="h-16 w-16 text-green-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Report Successfully Submitted</h1>
+            <p class="text-gray-600">Thank you for speaking up. Your report has been securely received.</p>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-blue-900 mb-4">🔑 Save These Details to Track Your Case</h2>
+            <div class="space-y-3">
+                <div class="bg-white rounded p-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Case ID:</label>
+                    <div class="font-mono text-lg font-bold text-blue-800 bg-blue-100 px-3 py-2 rounded">
+                        {{ case_id }}
+                    </div>
+                </div>
+                <div class="bg-white rounded p-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Access Code:</label>
+                    <div class="font-mono text-lg font-bold text-blue-800 bg-blue-100 px-3 py-2 rounded">
+                        {{ access_code }}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-blue-800">
+                <p class="font-medium">⚠️ Important: Write down or screenshot these details!</p>
+                <p>You'll need both to track your case and communicate with investigators.</p>
+            </div>
+        </div>
+
+        <div class="space-y-4 text-left text-sm text-gray-700">
+            <h3 class="font-semibold text-gray-900">What happens next?</h3>
+            <ul class="space-y-2 ml-4">
+                <li>• Your report is assigned to a qualified investigator</li>
+                <li>• Initial review will begin within 48 hours</li>
+                <li>• You can track progress using your Case ID and Access Code</li>
+                <li>• We may contact you through the secure portal for clarification</li>
+                <li>• You will receive updates on the investigation status</li>
+            </ul>
+        </div>
+
+        <div class="mt-8 space-x-4">
+            <a href="{% url 'track_case' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200">
+                Track My Case
+            </a>
+            <a href="{% url 'home' %}" class="text-gray-600 hover:text-gray-800 font-medium py-2 px-6">
+                Submit Another Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
