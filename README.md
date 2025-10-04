@@ -1,4 +1,4 @@
-# 🔒 SecureBank Whistleblowing System
+#  Whistleblowing  portal
 
 A secure, anonymous whistleblowing platform built with Django that allows users to report misconduct while maintaining complete anonymity and providing secure communication channels.
 
