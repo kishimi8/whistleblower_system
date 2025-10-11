@@ -11,7 +11,6 @@ class ReportAdmin(admin.ModelAdmin):
     list_filter = ['status',  'tip_type','organisation_type', 'created_at', 'assigned_investigator']
     search_fields = ['case_id', 'title']
     readonly_fields = ['case_id', 'access_code', 'created_at', 'updated_at']
-
     fieldsets = (
         ('Case Information', {
             'fields': ('case_id', 'access_code', 'status', 'assigned_investigator')
@@ -69,7 +68,12 @@ class CommunicationAdmin(admin.ModelAdmin):
         return obj.message[:100] + "..." if len(obj.message) > 100 else obj.message
 
     message_preview.short_description = 'Message Preview'
-
+    
+    # fieldsets = (
+    #     ('Communication Messages', {
+    #         'fields': ('new_evidence_file',)
+    #     }),
+    # )
 
 @admin.register(AuditLog)
 class AuditLogAdmin(admin.ModelAdmin):

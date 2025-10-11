@@ -144,7 +144,7 @@ class Communication(models.Model):
     is_from_investigator = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     sender_name = models.CharField(max_length=100, default='Anonymous')
-
+    new_evidence_file = models.FileField(upload_to='new_evidence/', blank=True, null=True)
     class Meta:
         ordering = ['created_at']
 

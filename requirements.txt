@@ -13,3 +13,4 @@ gunicorn==23.0.0
 uvicorn==0.35.0
 whitenoise==6.8.2
 django-money
+psycopg2-binary

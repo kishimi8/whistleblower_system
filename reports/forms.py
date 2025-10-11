@@ -62,7 +62,7 @@ class ReportForm(forms.ModelForm):
             'branch_address_of_organisation': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'rows': 3,
-                'placeholder': 'Location or Address of Branch where the Misconduct Occured. '
+                'placeholder': 'Location or Address of Branch where the Misconduct Occurred. '
             }),
             'description_of_tip': forms.Textarea(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
@@ -128,11 +128,14 @@ class CaseTrackingForm(forms.Form):
 class CommunicationForm(forms.ModelForm):
     class Meta:
         model = Communication
-        fields = ['message']
+        fields = ['message','new_evidence_file',]
         widgets = {
             'message': forms.Textarea(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'rows': 4,
                 'placeholder': 'Type your message here...'
+            }),
+            'new_evidence_file': forms.FileInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
             }),
         }
