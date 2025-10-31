@@ -3,9 +3,14 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from .models import Report, Communication, AuditLog
-
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
+from .resources import Reportresource
 
 @admin.register(Report)
+class ReportImportExport(ImportExportModelAdmin):
+    resource_classes = [Reportresource]
+
 class ReportAdmin(admin.ModelAdmin):
     list_display = ['case_id', 'title','tip_type','misconduct_ongoing_status', 'status', 'assigned_investigator', 'created_at']
     list_filter = ['status',  'tip_type','organisation_type', 'created_at', 'assigned_investigator']
@@ -35,6 +40,7 @@ class ReportAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('assigned_investigator')
@@ -87,3 +93,4 @@ class AuditLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False  # Make audit logs read-only
+

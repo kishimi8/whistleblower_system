@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-
+from import_export.formats.base_formats import CSV, XLSX,JSON
 from pathlib import Path
 
 load_dotenv()
@@ -24,8 +24,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'compressor',
+    'import_export',
     'djmoney',
-    'reports'
+    'reports',
+   # 'django_admin_kubi'
 ]
 
 MIDDLEWARE = [
@@ -132,3 +134,36 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+# import and export settings
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+
+
+# multiple import options
+IMPORT_FORMATS = [CSV, XLSX,JSON]
+
+# single export options
+EXPORT_FORMATS = [XLSX, CSV]
+
+##DJANGO_ADMIN_KUBI = {
+#    'ADMIN_HISTORY': True,  # enables the history action panel
+#    'ADMIN_SEARCH': True,  # enables a full modal search
+#}
+## ADMIN_MENU = "reports.admin_menu.MyAdminMenu"
+
+# HTTPS settings
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True
+#SECURE_SSL_REDIRECT = True
+
+# HSTS settings browsers wont conect over an unsecure connection disable in dev mode
+##SECURE_HSTS_SECONDS = 31536000 # 1 year
+##SECURE_HSTS_PRELOAD = True
+##SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+#email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.entuitivesupport.com.ng'  # Use your email provider's SMTP server
+EMAIL_PORT = 465
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'kishimi@entuitivesupport.com.ng'
+EMAIL_HOST_PASSWORD = 'ibrokish08Escube!'

@@ -6,7 +6,6 @@ from django.utils import timezone
 from djmoney.models.fields import MoneyField
 
 
-
 class Report(models.Model):
     STATUS_CHOICES = [
         ('new', 'New'),
@@ -40,7 +39,7 @@ class Report(models.Model):
 
     TIP_TYPE_CHOICES = [
         ('diversion_of_revenues','Diversion of Revenues'),
-        ('curruption','Curruption'),
+        ('corruption','Corruption'),
         ('noncompliance_with_efficiency_guidelines', 'NonCompliance with Efficiency Unit Expenditure Guidelines/Circulars'),
         ('fraud','Fraud'),
         ('information_on_stolen_public_funds','Information on Stolen Public Funds'),
@@ -55,7 +54,7 @@ class Report(models.Model):
         ('splitting_contracts','Splitting of Contracts'),
         ('violation_Procurement_procedures', 'Violation of Procurement Procedures'),
         ('procurement_fraud', 'Procurement Fraud(Kickbacks, Over invoicing etc)'),
-        ('nonremittance_lateremittance_revenue','NonRemittance/ Latre Remittance of Revenue'),
+        ('nonremittance_lateremittance_revenue','NonRemittance/ Late Remittance of Revenue'),
         ('concealed_funds_info','Information on Concealed Public Funds'),
         ('unapproved_expenditures', 'Unapproved Expenditures'),
     ]
