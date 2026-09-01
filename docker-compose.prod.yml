@@ -1,0 +1,169 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # 1. Primary Database (PostgreSQL 15)
+  # ----------------------------------------------------
+  db-primary:
+    image: postgres:15-alpine
+    container_name: whistle_db_primary
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-whistle}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REPLICATION_USER: ${REPLICATION_USER:-replicator}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./postgres/primary/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/primary/init-primary.sh:/docker-entrypoint-initdb.d/init-primary.sh:ro
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -p 5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ----------------------------------------------------
+  # 2. Standby Database (PostgreSQL 15 Hot Standby)
+  # ----------------------------------------------------
+  db-standby:
+    image: postgres:15-alpine
+    container_name: whistle_db_standby
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PRIMARY_HOST: db-primary
+      PRIMARY_PORT: 5432
+      REPLICATION_USER: ${REPLICATION_USER:-replicator}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_standby_data:/var/lib/postgresql/data
+      - ./postgres/standby/entrypoint-standby.sh:/entrypoint-standby.sh:ro
+    entrypoint: ["/entrypoint-standby.sh"]
+    ports:
+      - "5433:5432"
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -p 5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------
+  # 3. Redis (Cache, Sessions & 2FA State Store)
+  # ----------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: whistle_redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-redis_secure_pass}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secure_pass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ----------------------------------------------------
+  # 4. Migration & Static Collection Runner (One-Off)
+  # ----------------------------------------------------
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: whistle_migration
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME:-whistle}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db-primary
+      DB_PORT: 5432
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secure_pass}@redis:6379/1
+    volumes:
+      - static_data:/code/staticfiles
+      - media_data:/code/media
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput"
+    depends_on:
+      db-primary:
+        condition: service_healthy
+
+  # ----------------------------------------------------
+  # 5. Django Application Replicas
+  # ----------------------------------------------------
+  web-app-1: &web-app-template
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: whistle_app_1
+    restart: always
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-whistle.finance.gov.ng,localhost,127.0.0.1,web-app-1,web-app-2,web-app-3,nginx}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://whistle.finance.gov.ng,http://localhost,https://localhost}
+      DB_NAME: ${DB_NAME:-whistle}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db-primary
+      DB_PORT: 5432
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secure_pass}@redis:6379/1
+      SECURE_SSL_REDIRECT: "False"
+    volumes:
+      - static_data:/code/staticfiles:ro
+      - media_data:/code/media
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  web-app-2:
+    <<: *web-app-template
+    container_name: whistle_app_2
+
+  web-app-3:
+    <<: *web-app-template
+    container_name: whistle_app_3
+
+  # ----------------------------------------------------
+  # 6. Nginx Reverse Proxy / Load Balancer
+  # ----------------------------------------------------
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: whistle_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_data:/var/www/static:ro
+      - media_data:/var/www/media:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web-app-1
+      - web-app-2
+      - web-app-3
+
+volumes:
+  postgres_primary_data:
+  postgres_standby_data:
+  redis_data:
+  static_data:
+  media_data:

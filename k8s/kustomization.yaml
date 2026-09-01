@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whistleblower
+
+resources:
+  - 00-namespace.yaml
+  - 01-secrets.yaml
+  - 02-configmaps.yaml
+  - 03-storage.yaml
+  - 04-db-primary.yaml
+  - 05-db-standby.yaml
+  - 06-redis.yaml
+  - 07-migration-job.yaml
+  - 08-app-deployment.yaml
+  - 09-hpa.yaml
+  - 10-ingress.yaml

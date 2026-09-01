@@ -11,7 +11,14 @@ from .resources import Reportresource
 class ReportImportExport(ImportExportModelAdmin):
     resource_classes = [Reportresource]
 
+class CommunicationInline(admin.TabularInline):
+    model = Communication
+    extra = 1
+    fields = ['message', 'is_from_investigator', 'new_evidence_file', 'created_at']
+    readonly_fields = ['created_at']
+
 class ReportAdmin(admin.ModelAdmin):
+    inlines = [CommunicationInline]
     list_display = ['case_id', 'title','tip_type','misconduct_ongoing_status', 'status', 'assigned_investigator', 'created_at']
     list_filter = ['status',  'tip_type','organisation_type', 'created_at', 'assigned_investigator']
     search_fields = ['case_id', 'title']

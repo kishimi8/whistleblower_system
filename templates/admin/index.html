@@ -1,0 +1,79 @@
+{% extends 'admin/index.html' %}
+{% load i18n unfold %}
+
+{% block content %}
+{% if kpi %}
+<div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-3 md:gap-8 cursor-default">
+    {% for item in kpi %}
+    <div class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        <div class="font-medium text-gray-500 text-sm mb-2 dark:text-gray-400">
+            {{ item.title }}
+        </div>
+        <div class="flex flex-row items-end">
+            <span class="font-bold text-3xl text-gray-900 dark:text-gray-100 mr-2">
+                {{ item.metric }}
+            </span>
+        </div>
+        {% if item.footer %}
+        <div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            {{ item.footer }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if charts %}
+<div class="grid grid-cols-1 gap-4 mb-8 lg:grid-cols-2 lg:gap-8">
+    {% for chart in charts %}
+    <div
+        class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-6 border border-gray-100 dark:border-gray-700 flex flex-col">
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-6">{{ chart.title }}</h3>
+        <div class="flex-grow relative h-64 w-full">
+            <canvas id="chart-{{ forloop.counter }}"></canvas>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('chart-{{ forloop.counter }}').getContext('2d');
+            new Chart(ctx, {
+                type: '{{ chart.type }}',
+                data: {{ chart.data | safe }},
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: '{{ chart.type }}' === 'line',
+                        drawBorder: false,
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+                    });
+                });
+    </script>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# Keep the original app list and history #}
+{{ block.super }}
+
+{% endblock %}

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: whistleblower
+description: High-Availability Kubernetes Helm Chart for the Whistleblower System
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Federal Ministry of Finance - PICA Unit
+    email: kishimi8@gmail.com

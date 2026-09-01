@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-app
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  {{- if not .Values.app.autoscaling.enabled }}
+  replicas: {{ .Values.app.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "whistleblower.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        {{- include "whistleblower.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: web
+    spec:
+      affinity:
+        # NODE SPREAD / ANTI-AFFINITY: Distributes web pods across separate worker nodes
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/component
+                      operator: In
+                      values: ["web"]
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: web
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.app.service.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: {{ include "whistleblower.fullname" . }}-app-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: DB_PASSWORD
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: REDIS_PASSWORD
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@{{ include "whistleblower.fullname" . }}-redis-svc:6379/1"
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /admin/login/
+              port: {{ .Values.app.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /admin/login/
+              port: {{ .Values.app.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- if .Values.storage.media.enabled }}
+          volumeMounts:
+            - name: media-storage
+              mountPath: /code/media
+          {{- end }}
+      {{- if .Values.storage.media.enabled }}
+      volumes:
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: {{ include "whistleblower.fullname" . }}-media-pvc
+      {{- end }}

@@ -1,0 +1,30 @@
+========================================================================
+Whistleblower System has been successfully deployed to Kubernetes!
+========================================================================
+
+Release Name: {{ .Release.Name }}
+Namespace:    {{ .Release.Namespace }}
+
+1. Check the deployment status of all pods across nodes:
+   kubectl get pods -n {{ .Release.Namespace }} -o wide
+
+2. Verify that Primary and Standby databases are scheduled on SEPARATE nodes:
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/component=database -o wide
+
+3. Verify Horizontal Pod Autoscaler (HPA) status:
+   kubectl get hpa -n {{ .Release.Namespace }}
+
+4. Accessing the Application:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+   Visit: https://{{ .host }}
+{{- end }}
+{{- else }}
+   Port-forward to the web application:
+   kubectl port-forward svc/{{ include "whistleblower.fullname" . }}-app-svc 8000:8000 -n {{ .Release.Namespace }}
+   Visit: http://localhost:8000
+{{- end }}
+
+5. Check Streaming Replication Status:
+   kubectl exec -it statefulset/{{ include "whistleblower.fullname" . }}-db-primary -n {{ .Release.Namespace }} -- psql -U postgres -d {{ .Values.database.dbName }} -c "SELECT client_addr, state, sync_state FROM pg_stat_replication;"
+========================================================================

@@ -110,11 +110,31 @@ class Report(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        is_closing = False
+        if self.pk:
+            try:
+                old_instance = Report.objects.get(pk=self.pk)
+                if old_instance.closed_at is None and self.closed_at is not None:
+                    is_closing = True
+            except Report.DoesNotExist:
+                pass
+        elif self.closed_at is not None:
+            is_closing = True
+
         if not self.case_id:
             self.case_id = self.generate_case_id()
         if not self.access_code:
             self.access_code = self.generate_access_code()
+        
         super().save(*args, **kwargs)
+
+        if is_closing:
+            Communication.objects.create(
+                report=self,
+                message=f"This case has been officially closed. Resolution: {self.resolution_summary or 'No summary provided.'}",
+                is_from_investigator=True,
+                sender_name="System"
+            )
 
     def generate_case_id(self):
         return f"WB{timezone.now().year}{secrets.randbelow(999999):06d}"

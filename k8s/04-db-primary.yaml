@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: whistle-db-primary
+  namespace: whistleblower
+  labels:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
+spec:
+  serviceName: whistle-db-primary-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: whistleblower
+      app.kubernetes.io/component: database
+      app.kubernetes.io/role: primary
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: whistleblower
+        app.kubernetes.io/component: database
+        app.kubernetes.io/role: primary
+    spec:
+      affinity:
+        # STRICT NODE ANTI-AFFINITY: Ensures Primary is NOT scheduled on the same node as Standby
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["database"]
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: whistle-secrets
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: whistle-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: whistle-secrets
+                  key: DB_PASSWORD
+            - name: REPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: whistle-secrets
+                  key: REPLICATION_USER
+            - name: REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: whistle-secrets
+                  key: REPLICATION_PASSWORD
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1536Mi"
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-p", "5432"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-p", "5432"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d/init-primary.sh
+              subPath: init-primary.sh
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: whistle-db-primary-pvc
+        - name: config
+          configMap:
+            name: whistle-db-config
+        - name: init-scripts
+          configMap:
+            name: whistle-db-config
+            defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whistle-db-primary-svc
+  namespace: whistleblower
+  labels:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary

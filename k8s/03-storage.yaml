@@ -1,0 +1,65 @@
+# Primary Database Volume (ReadWriteOnce)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: whistle-db-primary-pvc
+  namespace: whistleblower
+  labels:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Standby Database Volume (ReadWriteOnce)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: whistle-db-standby-pvc
+  namespace: whistleblower
+  labels:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: standby
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Redis Persistent Volume (ReadWriteOnce)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: whistle-redis-pvc
+  namespace: whistleblower
+  labels:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Shared Media Storage for Evidence Files (ReadWriteMany - RWX)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: whistle-media-pvc
+  namespace: whistleblower
+  labels:
+    app.kubernetes.io/name: whistleblower
+    app.kubernetes.io/component: web
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

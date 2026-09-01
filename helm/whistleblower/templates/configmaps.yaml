@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-db-config
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+data:
+  postgresql.conf: |
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 150
+    shared_buffers = 256MB
+    wal_level = replica
+    max_wal_senders = 10
+    max_replication_slots = 10
+    wal_keep_size = 1024MB
+    hot_standby = on
+    archive_mode = on
+    archive_command = '/bin/true'
+    log_destination = 'stderr'
+
+  init-primary.sh: |
+    #!/bin/bash
+    set -e
+    echo ">>> Initializing Primary Database in Kubernetes..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        DO \$\$
+        BEGIN
+            IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${REPLICATION_USER:-replicator}') THEN
+                CREATE ROLE ${REPLICATION_USER:-replicator} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '${REPLICATION_PASSWORD}';
+            END IF;
+        END
+        \$\$;
+    EOSQL
+    if ! grep -q "replication ${REPLICATION_USER:-replicator}" "$PGDATA/pg_hba.conf"; then
+        echo "host replication ${REPLICATION_USER:-replicator} 0.0.0.0/0 md5" >> "$PGDATA/pg_hba.conf"
+        echo "host all all 0.0.0.0/0 md5" >> "$PGDATA/pg_hba.conf"
+    fi
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "SELECT pg_reload_conf();"
+
+  entrypoint-standby.sh: |
+    #!/bin/bash
+    set -e
+    PGDATA="${PGDATA:-/var/lib/postgresql/data}"
+    PRIMARY_HOST="${PRIMARY_HOST:-{{ include "whistleblower.fullname" . }}-db-primary-svc}"
+    PRIMARY_PORT="${PRIMARY_PORT:-5432}"
+    REPLICATION_USER="${REPLICATION_USER:-replicator}"
+
+    until pg_isready -h "$PRIMARY_HOST" -p "$PRIMARY_PORT" -U "$POSTGRES_USER"; do
+        echo "Waiting for primary database at ${PRIMARY_HOST}:${PRIMARY_PORT}..."
+        sleep 2
+    done
+
+    if [ ! -s "$PGDATA/PG_VERSION" ]; then
+        echo ">>> Standby volume is empty. Bootstrapping with pg_basebackup..."
+        rm -rf "${PGDATA:?}"/*
+        PGPASSWORD="${REPLICATION_PASSWORD}" pg_basebackup \
+            -h "$PRIMARY_HOST" \
+            -p "$PRIMARY_PORT" \
+            -U "$REPLICATION_USER" \
+            -D "$PGDATA" \
+            -Fp -Xs -R -v
+        chmod 700 "$PGDATA"
+    fi
+    exec postgres -c hot_standby=on
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-app-config
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+data:
+  DEBUG: {{ .Values.app.env.debug | quote }}
+  ALLOWED_HOSTS: {{ .Values.app.env.allowedHosts | quote }}
+  CSRF_TRUSTED_ORIGINS: {{ .Values.app.env.csrfTrustedOrigins | quote }}
+  DB_HOST: "{{ include "whistleblower.fullname" . }}-db-primary-svc"
+  DB_PORT: "5432"
+  DB_NAME: {{ .Values.database.dbName | quote }}

@@ -1,0 +1,129 @@
+# Global Settings
+global:
+  environment: production
+
+# Django Web Application Tier
+app:
+  replicaCount: 2
+  image:
+    repository: whistleblower-app
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  env:
+    debug: "False"
+    allowedHosts: "whistle.finance.gov.ng,localhost,127.0.0.1"
+    csrfTrustedOrigins: "https://whistle.finance.gov.ng,http://localhost"
+    djangoSecretKey: "django-insecure-prod-key-change-before-deployment"
+
+# PostgreSQL High Availability Database Tier
+database:
+  dbName: "whistle"
+  dbUser: "postgres"
+  dbPassword: "change_this_to_a_strong_database_password"
+  replicationUser: "replicator"
+  replicationPassword: "change_this_to_a_strong_replication_password"
+
+  primary:
+    image:
+      repository: postgres
+      tag: 15-alpine
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1536Mi
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+
+  standby:
+    enabled: true
+    image:
+      repository: postgres
+      tag: 15-alpine
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1536Mi
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+
+# Redis Cache & Sessions Tier
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7-alpine
+  password: "change_this_to_a_strong_redis_password"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+
+# Shared Media Storage (Evidence Uploads)
+storage:
+  media:
+    enabled: true
+    size: 1Gi
+    accessMode: ReadWriteMany
+    storageClass: ""
+
+# Pre-Deployment Migration Job
+migration:
+  enabled: true
+
+# Ingress & SSL
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: whistle.finance.gov.ng
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: whistle-tls-secret
+      hosts:
+        - whistle.finance.gov.ng

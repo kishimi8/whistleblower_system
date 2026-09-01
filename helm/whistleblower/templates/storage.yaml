@@ -1,0 +1,77 @@
+{{- if .Values.database.primary.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-db-primary-pvc
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
+spec:
+  accessModes:
+    - {{ .Values.database.primary.persistence.accessMode | default "ReadWriteOnce" }}
+  {{- if .Values.database.primary.persistence.storageClass }}
+  storageClassName: {{ .Values.database.primary.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.database.primary.persistence.size }}
+---
+{{- end }}
+{{- if and .Values.database.standby.enabled .Values.database.standby.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-db-standby-pvc
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: standby
+spec:
+  accessModes:
+    - {{ .Values.database.standby.persistence.accessMode | default "ReadWriteOnce" }}
+  {{- if .Values.database.standby.persistence.storageClass }}
+  storageClassName: {{ .Values.database.standby.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.database.standby.persistence.size }}
+---
+{{- end }}
+{{- if and .Values.redis.enabled .Values.redis.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-redis-pvc
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.redis.persistence.storageClass }}
+  storageClassName: {{ .Values.redis.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size }}
+---
+{{- end }}
+{{- if .Values.storage.media.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-media-pvc
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  accessModes:
+    - {{ .Values.storage.media.accessMode | default "ReadWriteMany" }}
+  {{- if .Values.storage.media.storageClass }}
+  storageClassName: {{ .Values.storage.media.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.media.size }}
+{{- end }}

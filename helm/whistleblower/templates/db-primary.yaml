@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-db-primary
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
+spec:
+  serviceName: {{ include "whistleblower.fullname" . }}-db-primary-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "whistleblower.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
+      app.kubernetes.io/role: primary
+  template:
+    metadata:
+      labels:
+        {{- include "whistleblower.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: database
+        app.kubernetes.io/role: primary
+    spec:
+      affinity:
+        # STRICT NODE ANTI-AFFINITY: Ensures Primary is NOT scheduled on the same node as Standby
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["database"]
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: postgres
+          image: "{{ .Values.database.primary.image.repository }}:{{ .Values.database.primary.image.tag }}"
+          command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: DB_PASSWORD
+            - name: REPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: REPLICATION_USER
+            - name: REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "whistleblower.fullname" . }}-secrets
+                  key: REPLICATION_PASSWORD
+          resources:
+            {{- toYaml .Values.database.primary.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-p", "5432"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-p", "5432"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d/init-primary.sh
+              subPath: init-primary.sh
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "whistleblower.fullname" . }}-db-primary-pvc
+        - name: config
+          configMap:
+            name: {{ include "whistleblower.fullname" . }}-db-config
+        - name: init-scripts
+          configMap:
+            name: {{ include "whistleblower.fullname" . }}-db-config
+            defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "whistleblower.fullname" . }}-db-primary-svc
+  labels:
+    {{- include "whistleblower.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    {{- include "whistleblower.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/role: primary
